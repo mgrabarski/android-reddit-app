@@ -6,9 +6,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.mateusz.grabarski.redditapp.model.Feed;
+import com.mateusz.grabarski.redditapp.model.Post;
 import com.mateusz.grabarski.redditapp.model.childs.Entry;
 import com.mateusz.grabarski.redditapp.utils.ExtractXML;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -41,19 +43,29 @@ public class MainActivity extends AppCompatActivity {
 
                 List<Entry> entries = response.body().getEntrys();
 
-                for (Entry entry : entries) {
-                    ExtractXML aHrefExtractor = new ExtractXML(entry.getContent(), "<a href=");
+                List<Post> posts = new ArrayList<>();
+
+                for (int i = 0; i < entries.size(); i++) {
+                    ExtractXML aHrefExtractor = new ExtractXML(entries.get(i).getContent(), "<a href=");
                     List<String> postContent = aHrefExtractor.start();
 
-                    ExtractXML srcImgExtractor = new ExtractXML(entry.getContent(), "<img src=");
+                    ExtractXML srcImgExtractor = new ExtractXML(entries.get(i).getContent(), "<img src=");
                     try {
                         postContent.add(srcImgExtractor.start().get(0));
                     } catch (NullPointerException | IndexOutOfBoundsException e) {
                         postContent.add(null);
                     }
 
-                    Log.d(TAG, "onResponse: " + postContent.toString());
+                    posts.add(new Post(
+                            entries.get(i).getTitle(),
+                            entries.get(i).getAuthor().getName(),
+                            entries.get(i).getUpdated(),
+                            postContent.get(0),
+                            postContent.get(postContent.size() - 1)
+                    ));
                 }
+
+                Log.d(TAG, "onResponse: " + posts.toString());
             }
 
             @Override
