@@ -1,6 +1,7 @@
 package com.mateusz.grabarski.redditapp.adapters;
 
 import android.support.annotation.NonNull;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,6 +51,9 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
+        @BindView(R.id.item_post_root_card)
+        CardView rootCv;
+
         @BindView(R.id.item_post_title_tv)
         TextView titleTv;
 
@@ -77,6 +81,8 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
                     .fit()
                     .centerCrop()
                     .into(thumbnailIv);
+
+            rootCv.setOnClickListener(v -> mListener.onPostClick(post));
         }
     }
 }

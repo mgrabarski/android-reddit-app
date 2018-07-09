@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements OnPostClickListen
 
     @Override
     public void onPostClick(Post post) {
-
+        CommentsActivity.start(this);
     }
 
     @OnClick(R.id.activity_main_search_iv)
