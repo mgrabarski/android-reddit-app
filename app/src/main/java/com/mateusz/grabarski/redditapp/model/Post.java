@@ -1,9 +1,11 @@
 package com.mateusz.grabarski.redditapp.model;
 
+import java.io.Serializable;
+
 /**
  * Created by Mateusz Grabarski on 04.07.2018.
  */
-public class Post {
+public class Post implements Serializable {
 
     private String title;
     private String author;
