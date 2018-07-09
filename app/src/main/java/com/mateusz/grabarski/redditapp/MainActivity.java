@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.ImageView;
 
 import com.mateusz.grabarski.redditapp.adapters.PostsAdapter;
 import com.mateusz.grabarski.redditapp.adapters.listeners.OnPostClickListener;
@@ -19,6 +21,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -32,14 +35,51 @@ public class MainActivity extends AppCompatActivity implements OnPostClickListen
     @BindView(R.id.activity_main_rv)
     RecyclerView mainRv;
 
-    private List<Post> posts;
-    private PostsAdapter postsAdapter;
+    @BindView(R.id.activity_main_search_et)
+    EditText searchEt;
+
+    @BindView(R.id.activity_main_search_iv)
+    ImageView searchIv;
+
+    private List<Post> mPosts;
+    private PostsAdapter mAdapter;
+    private String mCurrentFeed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        mainRv.setLayoutManager(new LinearLayoutManager(this));
+
+        mPosts = new ArrayList<>();
+        mAdapter = new PostsAdapter(mPosts, this);
+
+        mainRv.setAdapter(mAdapter);
+
+        loadFeeds();
+    }
+
+    @Override
+    public void onPostClick(Post post) {
+
+    }
+
+    @OnClick(R.id.activity_main_search_iv)
+    public void refreshFeeds() {
+        String feedName = searchEt.getText().toString();
+        if (feedName.equals("")) {
+            loadFeeds();
+        } else {
+            mCurrentFeed = feedName;
+            loadFeeds();
+        }
+    }
+
+    private void loadFeeds() {
+
+        mPosts.clear();
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(FeedAPI.BASE_URL)
@@ -48,18 +88,15 @@ public class MainActivity extends AppCompatActivity implements OnPostClickListen
 
         FeedAPI feedAPI = retrofit.create(FeedAPI.class);
 
-        mainRv.setLayoutManager(new LinearLayoutManager(this));
-
-        posts = new ArrayList<>();
-        postsAdapter = new PostsAdapter(posts, this);
-
-        mainRv.setAdapter(postsAdapter);
-
-        Call<Feed> call = feedAPI.getFeeds();
+        Call<Feed> call = feedAPI.getFeeds(mCurrentFeed);
 
         call.enqueue(new Callback<Feed>() {
             @Override
             public void onResponse(Call<Feed> call, Response<Feed> response) {
+
+                if (response.body() == null) {
+                    return;
+                }
 
                 List<Entry> entries = response.body().getEntrys();
 
@@ -74,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements OnPostClickListen
                         postContent.add(null);
                     }
 
-                    posts.add(new Post(
+                    mPosts.add(new Post(
                             entries.get(i).getTitle(),
                             entries.get(i).getAuthor().getName(),
                             entries.get(i).getUpdated(),
@@ -83,9 +120,9 @@ public class MainActivity extends AppCompatActivity implements OnPostClickListen
                     ));
                 }
 
-                Log.d(TAG, "onResponse: " + posts.toString());
+                Log.d(TAG, "onResponse: " + mPosts.toString());
 
-                runOnUiThread(() -> postsAdapter.notifyDataSetChanged());
+                runOnUiThread(() -> mAdapter.notifyDataSetChanged());
             }
 
             @Override
@@ -93,10 +130,5 @@ public class MainActivity extends AppCompatActivity implements OnPostClickListen
                 Log.d(TAG, "onFailure: " + t.getMessage());
             }
         });
-    }
-
-    @Override
-    public void onPostClick(Post post) {
-
     }
 }
